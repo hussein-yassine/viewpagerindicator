@@ -2,11 +2,14 @@ package com.zhpan.indicator.base
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 
 import androidx.annotation.ColorInt
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
+import com.yarolegovich.discretescrollview.DiscreteScrollView
 
 import com.zhpan.indicator.annotation.AIndicatorSlideMode
 import com.zhpan.indicator.annotation.AIndicatorStyle
@@ -26,6 +29,7 @@ open class BaseIndicatorView constructor(context: Context, attrs: AttributeSet?,
 
     private var mViewPager: ViewPager? = null
     private var mViewPager2: ViewPager2? = null
+    private var mDiscreteScrollView: DiscreteScrollView? = null
 
     private val mOnPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
@@ -83,9 +87,20 @@ open class BaseIndicatorView constructor(context: Context, attrs: AttributeSet?,
     }
 
     override fun notifyDataChanged() {
+        setupDiscreteScrollView()
         setupViewPager()
         requestLayout()
         invalidate()
+    }
+
+    private fun setupDiscreteScrollView() {
+        mDiscreteScrollView?.let {
+            mDiscreteScrollView?.removeItemChangedListener(this)
+            mDiscreteScrollView?.addOnItemChangedListener(this)
+            mDiscreteScrollView?.adapter?.let {
+                setPageSize(mDiscreteScrollView!!.adapter!!.itemCount)
+            }
+        }
     }
 
     private fun setupViewPager() {
@@ -221,7 +236,16 @@ open class BaseIndicatorView constructor(context: Context, attrs: AttributeSet?,
         notifyDataChanged()
     }
 
+    fun setupWithScrollView(discreteScrollView: DiscreteScrollView) {
+        mDiscreteScrollView = discreteScrollView
+        notifyDataChanged()
+    }
+
     override fun onPageScrollStateChanged(state: Int) {
+    }
+
+    override fun onCurrentItemChanged(viewHolder: RecyclerView.ViewHolder?, adapterPosition: Int) { 
+        onPageScrolled(adapterPosition,0f,0)
     }
 
     override fun setIndicatorOptions(options: IndicatorOptions) {
